@@ -1,9 +1,10 @@
-##  DEB model application for Perna - Zonation Project BRENTON ##
+##  DEB model application for Perna perna and Mytilus galloprovincialis ##
 
-# Parameters from DEBtool_M
-# Rates are in per hour (/h)
-
-# Simulate dynamics for Brenton on Sea
+  # User can change: species, site, level, climate change scenario 
+  # Parameters from DEBtool_M
+  # Environmental data is for one year (Oct 2015-Oct 2016)
+  # To estimate ultimate size under specific conditions, the time window is muliplied X10
+  # Rates are in per hour (/h)
 
 # Author: cristianmonaco
 ###############################################################################
@@ -12,7 +13,6 @@
 rm(list=ls())
 
 # Load packages -----------------------------------------------------------
-library(ggplot2)
 library(zoo)
 
 # Load environmental data -------------------------------------------------
@@ -23,22 +23,19 @@ load(file = "env.Rda")
 species <- "Perna"        ## CHANGE DEPENDING OF SPECIES
 species <- rep(species, nrow(env))
 
-
 # Define site -------------------------------------------------------------
   # BR (Brenton-on-sea), PT (Plettenberg Bay), KB (Keurboomstrand) #
 site <- "BR"              ## CHANGE DEPENDING OF SITE
 site <- rep(site, nrow(env))
-
 
 # Define shore level ------------------------------------------------------
   # Low, Mid, High #
 level <- "Low"              ## CHANGE DEPENDING OF SHORE LEVEL
 level <- rep(level, nrow(env))
 
-
 # Climate change scenarios ------------------------------------------------
   # current (0), RCP8.5_air (+3.5), RCP8.5_water (+2.21), RCP8.5_air_water (+3.5, +2.01)
-ccs <- "current"
+ccs <- "RCP8.5_air_water"              ## CHANGE DEPENDING OF CLIMATE CHANGE SCENARIO
 ccs <- rep(ccs, nrow(env))
 
 # Mussel height (estimated and +0.3, m above MLLW) ---------------------------------
@@ -84,9 +81,6 @@ Tbody <- ifelse(site == "BR" & species == "Perna" & level == "Low", as.vector(co
               ifelse(site == "KB" & species == "Mytilus" & level == "Mid", as.vector(coredata(env$Tbody_KB_Myt_Mid)) + 273,       
               as.vector(coredata(env$Tbody_KB_Myt_High)) + 273)))))))))))
 
-Tbody <- rep(Tbody, 10)                 # MULTIPLY TIME WINDOW FOR MORE YEARS
-
-
 # Consider climate change scenarios ---------------------------------------
 Tbody_current <- Tbody
 TbodyRCP8.5_air <- ifelse(tide_threshold == 1, Tbody, Tbody+3.5)
@@ -98,6 +92,7 @@ Tbody <- ifelse(ccs == "RCP8.5_air", TbodyRCP8.5_air,
                 ifelse(ccs == "RCP8.5_air_water", TbodyRCP8.5_air_water,
                 Tbody_current)))
 
+Tbody <- rep(Tbody, 10)                 # MULTIPLY TIME WINDOW FOR MORE YEARS
 
 # Food density, X (ugChl-a/l ----------------------------------------------
 X <- ifelse(site == "BR", as.vector(coredata(env$MODISAqua_BR)),
@@ -106,7 +101,6 @@ X <- ifelse(site == "BR", as.vector(coredata(env$MODISAqua_BR)),
 
 
 X <- rep(X, 10)                         # MULTIPLY TIME WINDOW FOR MORE YEARS
-
 
 
 # Run DEB model -----------------------------------------------------------
@@ -181,24 +175,24 @@ for(t in 1:length(Tbody)) {
   # Energy conductance
   v[t] <- v.ref * sM[t]
   
-  # Max. assimilation rate, {pAm} (J/cm2.d)
+  # Max. assimilation rate, {pAm} (J/cm2.h)
   p_Xm_TC[t] <- TC[t] * p_Xm
   p_Am[t] <- p_Xm_TC[t] * ae * sM[t]
   
-  # Assimilation, pA (J/d)      
+  # Assimilation, pA (J/h)      
   pA[t] <- p_Am[t] * f[t] * V[t]^(2/3)
   
-  # Somatic maintenance, pM (J/d)
+  # Somatic maintenance, pM (J/h)
   p_M_TC[t] <- TC[t] * p_M
   pM[t] <- p_M_TC[t] * V[t]
   
-  # Catabolic utilization, pC (J/d)
+  # Catabolic utilization, pC (J/h)
   pC[t] <- (E.dens[t]/ (E_G + kap * E.dens[t])) * (((E_G * p_Am[t] * V[t]^(2/3)) / E_m) + pM[t])
   
-  # Growth, pG (J/d)
+  # Growth, pG (J/h)
   pG[t] <- kap * pC[t] - pM[t]      
   
-  # Maturity maintenance, pJ (J/d)
+  # Maturity maintenance, pJ (J/h)
   pJ[t] <-  TC[t] * min(((1-kap)/ (kap)) * V[t] * p_M, ((1-kap)/ (kap)) * V_p * p_M)
   
   # Reproduction, pR (J/d) 
@@ -213,7 +207,7 @@ for(t in 1:length(Tbody)) {
   dER.dt[t]  <- ifelse(V[t] > V_p, pR[t], 0)
   # Gamete production, dgam/dt (J)
   dgam.dt[t] <- dER.dt[t] * kap_R
-  # Energy content of one egg, E_egg (J/egg), but 0.0019 J/egg (van der Veer et al. 2006) 
+  # Energy content of one egg, E_egg (J/egg)
   E_egg <- 0.0019
   # Fecundity, F (eggs)
   eggs[t] <- gam[t]/ E_egg
@@ -223,13 +217,13 @@ for(t in 1:length(Tbody)) {
   
   # Total physical length, Lw (cm)
   L[t] <- V[t]^(1/3)/del_M
-  # Total physical dry weight, Wdw (g) -- Excluding shell -- from Marko Jusup's tuna paper
+  # Total physical dry weight, Wdw (g) -- Excluding shell
   Wdw[t] <- V[t] * d_V + ((E[t] + ER[t]) * rho_E)
   # Total physical wet weight, Www (g)
   Www[t] <- Wdw[t] / d_V
   # Soma dry weigth, Wsdw (g)
   Wsdw[t] <- V[t] * d_V + E[t] * rho_E
-  # Gonad dry weight (g) -- Lavaud et al 2013
+  # Gonad dry weight (g)
   Wgdw[t] <- gam[t] * rho_E 
   # GSI (-)
   GSI[t] <- Wgdw[t]/(Wsdw[t])
@@ -249,12 +243,16 @@ for(t in 1:length(Tbody)) {
 }
 ## END OF MODEL LOOP ##
 
-  plot(GSI[1:20], type='l')
+  plot(GSI, type='l')
   max(GSI[1:8760])
   plot(L, type='l')
   max(L)
+  
+  plot(Wgdw, type='l')
+  plot(L[1:8760], Wgdw[1:8760], type='l')
+  max(Wgdw[1:8760])
 
-
+    
 # Diagnostic plots --------------------------------------------------------------------
 
 # Energy flows
