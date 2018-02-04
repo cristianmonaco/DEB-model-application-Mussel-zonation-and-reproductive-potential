@@ -18,25 +18,10 @@ library(zoo)
 # Load environmental data -------------------------------------------------
 load(file = "env.Rda")
 
-# Define species ----------------------------------------------------------
-  # Perna (Perna perna), Mytilus (Mytilus galloprovincialis) #
-species <- "Perna"        ## CHANGE DEPENDING OF SPECIES
-species <- rep(species, nrow(env))
 
-# Define site -------------------------------------------------------------
-  # BR (Brenton-on-sea), PT (Plettenberg Bay), KB (Keurboomstrand) #
-site <- "BR"              ## CHANGE DEPENDING OF SITE
-site <- rep(site, nrow(env))
+# Load user input ---------------------------------------------------------
+source("user_input.R")
 
-# Define shore level ------------------------------------------------------
-  # Low, Mid, High #
-level <- "Low"              ## CHANGE DEPENDING OF SHORE LEVEL
-level <- rep(level, nrow(env))
-
-# Climate change scenarios ------------------------------------------------
-  # current (0), RCP8.5_air (+3.5), RCP8.5_water (+2.21), RCP8.5_air_water (+3.5, +2.01)
-ccs <- "RCP8.5_air_water"              ## CHANGE DEPENDING OF CLIMATE CHANGE SCENARIO
-ccs <- rep(ccs, nrow(env))
 
 # Mussel height (estimated and +0.3, m above MLLW) ---------------------------------
   # Thresholds Brenton: High = 1.21 m, Mid = 1.04 m, Low = 0.91 m.
@@ -58,8 +43,8 @@ tide <- env$tides
 tide_threshold <- ifelse(tide >= height, 1, 0)
 tide_threshold <- as.vector(coredata(tide_threshold))
 
-tide_threshold <- rep(tide_threshold, 10)               # MULTIPLY TIME WINDOW FOR MORE YEARS
-tide <- rep(as.vector(coredata(tide)), 10)              # MULTIPLY TIME WINDOW FOR MORE YEARS
+tide_threshold <- rep(tide_threshold, n_years)               # MULTIPLY TIME WINDOW FOR MORE YEARS
+tide <- rep(as.vector(coredata(tide)), n_years)              # MULTIPLY TIME WINDOW FOR MORE YEARS
 
 # Percent aerial exposure
 100-round(100*sum(tide_threshold)/ length(tide_threshold), 2)
@@ -92,7 +77,7 @@ Tbody <- ifelse(ccs == "RCP8.5_air", TbodyRCP8.5_air,
                 ifelse(ccs == "RCP8.5_air_water", TbodyRCP8.5_air_water,
                 Tbody_current)))
 
-Tbody <- rep(Tbody, 10)                 # MULTIPLY TIME WINDOW FOR MORE YEARS
+Tbody <- rep(Tbody, n_years)                 # MULTIPLY TIME WINDOW FOR MORE YEARS
 
 # Food density, X (ugChl-a/l ----------------------------------------------
 X <- ifelse(site == "BR", as.vector(coredata(env$MODISAqua_BR)),
@@ -100,7 +85,7 @@ X <- ifelse(site == "BR", as.vector(coredata(env$MODISAqua_BR)),
             as.vector(coredata(env$MODISAqua_KB))))
 
 
-X <- rep(X, 10)                         # MULTIPLY TIME WINDOW FOR MORE YEARS
+X <- rep(X, n_years)                         # MULTIPLY TIME WINDOW FOR MORE YEARS
 
 
 # Run DEB model -----------------------------------------------------------
