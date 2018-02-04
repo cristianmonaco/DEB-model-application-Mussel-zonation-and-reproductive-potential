@@ -9,3 +9,4 @@ The file `TC_fun.R` containes the equations to calculate the thermal sensitivity
 DEB theory is fully explained in the book by S.A.L.M. Kooijman, "Dynamic Energy Budget Theory For Metabolic Organization", 2010, 3rd edition, Cambridge. 
 
 This version of the model is used in the manuscript in prep "Invasive species reproductive advantage: observations and predictions in a heterogeneous world" by Cristián J. Monaco and Christopher D. McQuaid (Rhodes University, South Africa).
+# DEB-model-application-Mussel-zonation
