@@ -1,4 +1,4 @@
-##  DEB model application for Perna perna and Mytilus galloprovincialis ##
+##  DEB model application for Perna perna and Mytilus galloprovincialis - Mussel Zonation and Reproductive Potential ##
 
   # User can change: species, site, level, climate change scenario 
   # Parameters from DEBtool_M
